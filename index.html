@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<!-- [Previous head styles remain the same until we add new styles] -->
+<head>
+    <meta charset="UTF-8">
+    <title>Aprendiendo Tablas de Multiplicar</title>
+    <style>
+        /* [Previous styles remain unchanged] */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f8f9fa;
+            color: #2d3436;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a73e8;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .tab-button {
+            background: transparent;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: #1a73e8;
+            border-bottom-color: #1a73e8;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        input {
+            padding: 0.8rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+
+        button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        .result {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+        }
+
+        .explanation {
+            margin-top: 1rem;
+        }
+
+        .first-interpretation {
+            background: #4b5320;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .second-interpretation {
+            background: #d2691e;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .quiz-item {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-item.correct {
+            background: #e3fcef;
+            border-color: #00c853;
+        }
+
+        .quiz-item.incorrect {
+            background: #ffe6e6;
+            border-color: #ff1744;
+        }
+
+        #score {
+            font-size: 1.2rem;
+            color: #1a73e8;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        label {
+            font-weight: 500;
+            color: #444;
+        }
+
+        .result h3 {
+            color: #1a73e8;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- [Previous body content remains the same until we modify the calculate() function] -->
+    <div class="container">
+        <h1>Aprendiendo Tablas de Multiplicar</h1>
+        
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showTab('concept', this)">Concepto</button>
+            <button class="tab-button" onclick="showTab('quiz', this)">Práctica</button>
+        </div>
+
+        <div class="tab-content">
+            <div id="concept-tab" class="card">
+                <div class="input-group">
+                    <label>Número base:</label>
+                    <input type="number" id="baseNumber" value="2" min="1" max="10">
+                    <label>Multiplicador:</label>
+                    <input type="number" id="multiplier" value="1" min="1" max="10">
+                    <button onclick="calculate()">Calcular</button>
+                </div>
+                <div class="result" id="result"></div>
+            </div>
+
+            <div id="quiz-tab" class="card" style="display: none;">
+                <div class="input-group">
+                    <label>Tabla del:</label>
+                    <input type="number" id="quizBase" value="2" min="1" max="10">
+                    <label>Hasta:</label>
+                    <input type="number" id="quizLimit" value="9" min="1" max="20">
+                    <button onclick="startQuiz()">Comenzar Práctica</button>
+                </div>
+                <div id="score"></div>
+                <div id="quiz-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestions = [];
+        let score = 0;
+        let totalQuestions = 0;
+
+        function showTab(tabName, button) {
+            document.querySelectorAll('.tab-content > div').forEach(tab => tab.style.display = 'none');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName + '-tab').style.display = 'block';
+            button.classList.add('active');
+        }
+
+        function calculate() {
+            const baseNumber = parseInt(document.getElementById('baseNumber').value);
+            const multiplier = parseInt(document.getElementById('multiplier').value);
+            const result = baseNumber * multiplier;
+
+            let sumExplanation1 = Array(multiplier).fill(baseNumber).join(' + ');
+            let sumExplanation2 = Array(baseNumber).fill(multiplier).join(' + ');
+
+            let html = `
+                <h3>${baseNumber} × ${multiplier} = ${result}</h3>
+                <div class="explanation">
+                    <div class="first-interpretation">
+                        <p><strong>Primera interpretación:</strong></p>
+                        <p>${baseNumber} sumado ${multiplier} veces:</p>
+                        <p>${sumExplanation1} = ${result}</p>
+                    </div>
+                    
+                    <div class="second-interpretation">
+                        <p><strong>Segunda interpretación:</strong></p>
+                        <p>${multiplier} sumado ${baseNumber} veces:</p>
+                        <p>${sumExplanation2} = ${result}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('result').innerHTML = html;
+        }
+
+        function startQuiz() {
+            const baseNumber = parseInt(document.getElementById('quizBase').value);
+            const limit = parseInt(document.getElementById('quizLimit').value);
+            score = 0;
+            totalQuestions = limit;
+            
+            currentQuestions = Array.from({length: limit}, (_, i) => ({
+                base: baseNumber,
+                multiplier: i + 1,
+                answered: false
+            }));
+
+            renderQuiz();
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+
+            currentQuestions.forEach((q, index) => {
+                if (!q.answered) {
+                    const sumRepetition = Array(q.multiplier).fill(q.base).join(' + ');
+                    const altSumRepetition = Array(q.base).fill(q.multiplier).join(' + ');
+                    
+                    const quizItem = document.createElement('div');
+                    quizItem.className = 'quiz-item';
+                    quizItem.innerHTML = `
+                        <p>${q.base} × ${q.multiplier}</p>
+                        <p>${sumRepetition} = ${altSumRepetition} = 
+                        <input type="number" id="answer-${index}" style="width: 80px">
+                        <button onclick="checkAnswer(${index})">Comprobar</button>
+                        </p>
+                    `;
+                    container.appendChild(quizItem);
+                }
+            });
+
+            document.getElementById('score').textContent = 
+                `Puntuación: ${score}/${totalQuestions} correctas`;
+        }
+
+        function checkAnswer(index) {
+            const question = currentQuestions[index];
+            const userAnswer = parseInt(document.getElementById(`answer-${index}`).value);
+            const correctAnswer = question.base * question.multiplier;
+
+            const quizItem = document.getElementById(`answer-${index}`).parentElement.parentElement;
+            
+            if (userAnswer === correctAnswer) {
+                score++;
+                quizItem.classList.add('correct');
+                quizItem.innerHTML += `<p>¡Correcto! ${question.base} × ${question.multiplier} = ${correctAnswer}</p>`;
+            } else {
+                quizItem.classList.add('incorrect');
+                quizItem.innerHTML += `
+                    <p>Incorrecto. La respuesta correcta es ${correctAnswer}</p>
+                    <p>Explicación: ${question.base} × ${question.multiplier} = 
+                    ${Array(question.multiplier).fill(question.base).join(' + ')} = ${correctAnswer}</p>
+                `;
+            }
+
+            question.answered = true;
+            renderQuiz();
+        }
+
+        // Iniciar con el concepto
+        calculate();
+    </script>
+</body>
+</html>
